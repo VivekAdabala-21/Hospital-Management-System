@@ -1,13 +1,19 @@
 package HospitalManagementSystem;
-
 import java.sql.*;
 import java.util.Scanner;
 
 public class HospitalManagementSystem {
-    private static final String url = "jdbc:mysql://mysql:3306/hospital";
-    private static final String username = "root";
-    private static final String password = "Admin@123";
+     private static final String url =
+        System.getenv().getOrDefault(
+                "DB_URL",
+                "jdbc:mysql://mysql:3306/hospital"
+        );
 
+     private static final String username =
+        System.getenv().getOrDefault("DB_USERNAME", "root");
+
+     private static final String password =
+        System.getenv("DB_PASSWORD");
     public static void main(String[] args) {
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -22,15 +28,18 @@ public class HospitalManagementSystem {
               try {
                    connection = DriverManager.getConnection(url, username, password);
                     System.out.println("✅ Connected to MySQL!");
-               } catch (SQLException e) {
-                  System.out.println("⏳ MySQL is not ready. Retrying in 5 seconds...");
-                 try {
-                       Thread.sleep(5000);
-                     } catch (InterruptedException ex) {
-                         Thread.currentThread().interrupt();
-                     }
-               }
-   }
+                   } catch (SQLException e) {
+                       System.err.println("MySQL connection failed: " + e.getMessage());
+                       System.out.println("Retrying in 5 seconds...");
+
+                       try {
+                             Thread.sleep(5000);
+                           } catch (InterruptedException ex) {
+                              Thread.currentThread().interrupt();
+                               break;
+                            }
+                      }
+              }
             Patient patient = new Patient(connection, scanner);
             Doctor doctor = new Doctor(connection);
           /* while(true){

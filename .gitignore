@@ -42,5 +42,30 @@ Thumbs.db
 ### IntelliJ IDEA ###
 .idea/
 *.iml
+<<<<<<< HEAD
 
 .env
+=======
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Terraform local state and secrets
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+
+# Jenkins and deployment secrets
+secrets/
+
+# Local environment and temporary files
+*.swp
+*.swo
+*~
+
+# Build and test reports
+dependency-reduced-pom.xml
+>>>>>>> a1e5f8c (Prepare Hospital Management System for Phase 1 deployment)

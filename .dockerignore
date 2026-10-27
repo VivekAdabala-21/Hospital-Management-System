@@ -1,8 +1,9 @@
 .git
+.github
 .gitignore
 .env
+.idea
+.vscode
+*.iml
 target/
 *.log
-*.class
-.idea/
-.vscode/

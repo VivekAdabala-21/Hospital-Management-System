@@ -3,36 +3,38 @@ services:
   mysql:
     image: mysql:8.4
     container_name: mysql-db
-    restart: always
+    restart: unless-stopped
 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: hospital
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hospital}
 
     ports:
       - "127.0.0.1:3307:3306"
 
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        - CMD-SHELL
+        - 'mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent'
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
 
   hospital-app:
+    image: hospital-management-system:${IMAGE_TAG:-latest}
     build: .
     container_name: hospital-app
     restart: on-failure
 
-    ports:
-      - "8081:8080"
-
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_URL: ${DB_URL:-jdbc:mysql://mysql:3306/hospital}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
 
     depends_on:
       mysql:
@@ -40,3 +42,4 @@ services:
 
 volumes:
   mysql-data:
+
