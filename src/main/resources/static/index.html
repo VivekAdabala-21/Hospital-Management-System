@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>🏥 MediCare</h2>
+        <p class="menu-title">MAIN MENU</p>
+        <nav>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#patients">Patients</a>
+            <a href="#doctors">Doctors</a>
+            <a href="#appointments">Appointments</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h1>Hospital Dashboard</h1>
+                <p>Welcome to Hospital Management System</p>
+            </div>
+            <span class="admin">Administrator</span>
+        </header>
+
+        <section id="dashboard">
+            <h2>Overview</h2>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Patients</h3>
+                    <p id="totalPatients">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total Doctors</h3>
+                    <p id="totalDoctors">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Appointments</h3>
+                    <p id="totalAppointments">0</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="patients" class="panel">
+            <h2>Patient Management</h2>
+
+            <form id="patientForm">
+                <input type="text" id="patientName"
+                       placeholder="Patient Name" required>
+
+                <input type="number" id="patientAge"
+                       placeholder="Age" min="1" required>
+
+                <select id="patientGender" required>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <button type="submit">Add Patient</button>
+            </form>
+
+            <h3>Patient Records</h3>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="doctors" class="panel">
+            <h2>Doctor Management</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Doctor Name</th>
+                            <th>Specialization</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="appointments" class="panel">
+            <h2>Appointment Management</h2>
+
+            <form id="appointmentForm">
+                <select id="appointmentPatient" required>
+                    <option value="">Select Patient</option>
+                </select>
+
+                <select id="appointmentDoctor" required>
+                    <option value="">Select Doctor</option>
+                </select>
+
+                <input type="date" id="appointmentDate" required>
+
+                <button type="submit">Book Appointment</button>
+            </form>
+
+            <h3>Appointment Records</h3>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient ID</th>
+                            <th>Doctor ID</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
