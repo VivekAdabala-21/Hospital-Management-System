@@ -6,11 +6,9 @@ pipeline {
         IMAGE_NAME = 'hospital-management-system'
         IMAGE_TAG = "${BUILD_NUMBER}"
         COMPOSE_PROJECT_NAME = 'hospital-management-system'
-        DEPLOY_DIR = '/home/ubuntu/Hospital-Management-System'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -23,10 +21,13 @@ pipeline {
             }
         }
 
-        stage('Verify JAR') {
+        stage('Verify Build Files') {
             steps {
                 sh '''
                     test -f target/hospital-management-system-1.0.0.jar
+                    test -f Dockerfile
+                    test -f docker-compose.yml
+                    test -f sql/init.sql
                 '''
             }
         }
@@ -41,16 +42,6 @@ pipeline {
             }
         }
 
-        stage('Validate Deployment Configuration') {
-            steps {
-                sh '''
-                    test -f ${DEPLOY_DIR}/docker-compose.yml
-                    test -f ${DEPLOY_DIR}/.env
-                    docker compose version
-                '''
-            }
-        }
-
         stage('Deploy Application') {
             steps {
                 withCredentials([
@@ -60,14 +51,23 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        set +x
+
                         export MYSQL_ROOT_PASSWORD="$DB_SECRET"
                         export DB_PASSWORD="$DB_SECRET"
-                        export IMAGE_TAG="${IMAGE_TAG}"
+                        export IMAGE_TAG="$BUILD_NUMBER"
 
                         docker compose \
                           -p "$COMPOSE_PROJECT_NAME" \
-                          -f "${DEPLOY_DIR}/docker-compose.yml" \
-                          up -d --no-build hospital-app
+                          --project-directory "$WORKSPACE" \
+                          -f "$WORKSPACE/docker-compose.yml" \
+                          config --quiet
+
+                        docker compose \
+                          -p "$COMPOSE_PROJECT_NAME" \
+                          --project-directory "$WORKSPACE" \
+                          -f "$WORKSPACE/docker-compose.yml" \
+                          up -d --no-build --no-deps hospital-app
                     '''
                 }
             }
@@ -76,10 +76,26 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                    sleep 10
+                    attempt=0
 
-                    docker inspect \
-                      --format='{{.State.Status}}' hospital-app
+                    until docker inspect \
+                      --format='{{.State.Running}}' hospital-app 2>/dev/null \
+                      | grep -q true && \
+                      docker logs hospital-app 2>&1 \
+                      | grep -q 'Connected to MySQL'; do
+
+                        attempt=$((attempt + 1))
+
+                        if [ "$attempt" -ge 12 ]; then
+                            echo "Deployment verification failed."
+                            docker logs --tail 100 hospital-app
+                            exit 1
+                        fi
+
+                        sleep 5
+                    done
+
+                    echo "Application is running and connected to MySQL."
                 '''
             }
         }
@@ -91,7 +107,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed. Check the Jenkins console output.'
+            echo 'Pipeline failed. Check Jenkins console output.'
         }
 
         always {
