@@ -1,17 +1,16 @@
+
 pipeline {
     agent any
-
-    tools {
-        jdk 'Java21'
-        maven 'Maven3'
-    }
 
     environment {
         IMAGE_NAME = 'hospital-management-system'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        COMPOSE_PROJECT_NAME = 'hospital-management-system'
+        DEPLOY_DIR = '/home/ubuntu/Hospital-Management-System'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -26,7 +25,9 @@ pipeline {
 
         stage('Verify JAR') {
             steps {
-                sh 'test -f target/hospital-management-system-1.0.0.jar'
+                sh '''
+                    test -f target/hospital-management-system-1.0.0.jar
+                '''
             }
         }
 
@@ -40,16 +41,45 @@ pipeline {
             }
         }
 
-        stage('Validate Compose') {
+        stage('Validate Deployment Configuration') {
             steps {
-                sh 'docker compose config --quiet'
+                sh '''
+                    test -f ${DEPLOY_DIR}/docker-compose.yml
+                    test -f ${DEPLOY_DIR}/.env
+                    docker compose version
+                '''
             }
         }
 
         stage('Deploy Application') {
             steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'hospital-db-password',
+                        variable: 'DB_SECRET'
+                    )
+                ]) {
+                    sh '''
+                        export MYSQL_ROOT_PASSWORD="$DB_SECRET"
+                        export DB_PASSWORD="$DB_SECRET"
+                        export IMAGE_TAG="${IMAGE_TAG}"
+
+                        docker compose \
+                          -p "$COMPOSE_PROJECT_NAME" \
+                          -f "${DEPLOY_DIR}/docker-compose.yml" \
+                          up -d --no-build hospital-app
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
                 sh '''
-                 IMAGE_TAG=${BUILD_NUMBER} docker compose up -d --no-build
+                    sleep 10
+
+                    docker inspect \
+                      --format='{{.State.Status}}' hospital-app
                 '''
             }
         }
@@ -57,11 +87,11 @@ pipeline {
 
     post {
         success {
-            echo 'Build and deployment completed successfully.'
+            echo 'Hospital Management System deployed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed. Review the stage logs.'
+            echo 'Pipeline failed. Check the Jenkins console output.'
         }
 
         always {
