@@ -5,5 +5,4 @@
 .idea
 .vscode
 *.iml
-target/
 *.log
