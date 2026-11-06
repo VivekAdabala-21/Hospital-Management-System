@@ -107,8 +107,8 @@ pipeline {
                     until docker inspect \
                       --format='{{.State.Running}}' hospital-app 2>/dev/null \
                       | grep -q true && \
-                      docker logs hospital-app 2>&1 \
-                      | grep -q 'Connected to MySQL'; do
+                      curl -fsS --max-time 5 http://localhost:8081/ \
+                      >/dev/null; do
 
                         attempt=$((attempt + 1))
 
@@ -118,10 +118,11 @@ pipeline {
                             exit 1
                         fi
 
+                        echo "Waiting for application HTTP response..."
                         sleep 5
                     done
 
-                    echo "Application is running and connected to MySQL."
+                    echo "Application is running and responding successfully."
                 '''
             }
         }
