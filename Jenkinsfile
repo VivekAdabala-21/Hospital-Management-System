@@ -42,6 +42,32 @@ pipeline {
             }
         }
 
+        stage('Test MySQL Credentials') {
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'hospital-db-password',
+                        variable: 'DB_SECRET'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+
+                        if docker exec \
+                            -e MYSQL_PWD="$DB_SECRET" \
+                            mysql-db mysql -uroot -Nse "SELECT 1" \
+                            >/dev/null 2>&1; then
+
+                            echo "Jenkins credential authentication successful."
+                        else
+                            echo "Jenkins credential authentication failed."
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+        }
+
         stage('Deploy Application') {
             steps {
                 withCredentials([
